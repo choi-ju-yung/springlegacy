@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:websocket="http://www.springframework.org/schema/websocket" 
+	xsi:schemaLocation="http://www.springframework.org/schema/websocket http://www.springframework.org/schema/websocket/spring-websocket-4.3.xsd
+		http://www.springframework.org/schema/mvc https://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd">
+	<!-- xmlns:websocket이랑  xsi:schemaLocation 있어야함 -->
+
+	<!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
+	
+	<!-- Enables the Spring MVC @Controller programming model -->
+	<annotation-driven />
+
+	<!-- Handles HTTP GET requests for /resources/** by efficiently serving up static resources in the ${webappRoot}/resources directory -->
+	<resources mapping="/resources/**" location="/resources/" />
+
+	<!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
+	<beans:bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<beans:property name="prefix" value="/WEB-INF/views/" />
+		<beans:property name="suffix" value=".jsp" />
+	</beans:bean>
+	
+	
+	<context:component-scan base-package="com.bs.spring"/>
+	
+	
+	<!-- 
+		pojo클래스 bean으로 등록하기 
+		<beans:bean>태그를 이용해서 등록
+			속성 
+			id : context 내에서 사용하는 bean이름
+			class : 대상이되는 클래스지정(패키지명.클래스명)	
+	-->
+	<!-- Animal 클래스를 default 생성자로 생성해서 bean으로 등록 -->
+	<!-- <beans:bean id="bbo" class="com.bs.spring.beantest.Animal"/> --> <!-- xml파일로 클래스 등록하는 방법 -->
+	 
+	<!-- pojo생성시 setter를 이용해서 데이터를 넣어서 생성시키기 -->
+<!-- 	<beans:bean id="bbo" class="com.bs.spring.beantest.Animal">
+		<beans:property name="name" value="뽀숑"/> 
+		<beans:property name="age" value="3"/>
+		<beans:property name="height" value="50.4"/> 
+
+	</beans:bean> -->
+	
+	<!-- 매개변수있는 생성자를 이용해서 생성시키기 -->
+	<!-- 두개만 넣을경우, 해당 클래스에서 그 타입과 개수에 해당하는 매개변수 있는 생성자를 생성해야함 -->
+	<beans:bean id="bbo" class="com.bs.spring.beantest.Animal">
+		<beans:constructor-arg index="0" value="뽀숑"/> <!-- 0번 : 이름 -->
+		<beans:constructor-arg index="1" value="3"/> <!-- 1번 : 나이 -->
+		<beans:constructor-arg index="2" value="50.4"/> <!-- 2번 : 키 -->
+	</beans:bean>
+	
+	<beans:bean id="dog" class="com.bs.spring.beantest.Animal">
+		<beans:property name="name" value="뽀삐"/>
+	</beans:bean>
+	
+	<beans:bean id="emp" class="com.bs.spring.beantest.Employee"
+	init-method="initialMethod" destroy-method="destroyMethod">
+	<!-- 생성될때 실행시킬메소드 , 소멸될때 실행시킬 메소드 -->
+		<beans:property name="name" value="최주영"/>
+		<beans:property name="age" value="24"/>
+		<beans:property name="address" value="경기도 안양시"/>
+		<beans:property name="salary" value="100"/>
+		<beans:property name="dept" ref="dept"/>
+	</beans:bean>
+	
+	<beans:bean id="emp2" class="com.bs.spring.beantest.Employee">
+		<beans:constructor-arg index="0" ref="dept"/>
+	</beans:bean>
+	
+	<!-- 등록하는 bean이 다른 클래스와 연관관계(참조)가 설정되어 있을때는  
+		다른 bean을 등록해야한다.
+		ref 속성을 이용해서 설정한다.
+	-->
+
+	
+	<beans:bean id="dept" class="com.bs.spring.beantest.Department">
+		<beans:constructor-arg index="0" value="1"/>
+		<beans:constructor-arg index="1" value="개발부"/>
+		<beans:constructor-arg index="2" value="판교"/>
+	</beans:bean>
+	
+	
+	<!-- 인터셉터 등록하기 -->
+	<interceptors>
+		<interceptor>
+			<mapping path="/demo/*"/> <!-- demo/ 매핑되는 페이지들을 대상으로 인터셉터등록 -->
+			<exclude-mapping path="/demo/demo.do"/> <!-- exclude-mapping : 제외대상 -->
+			<beans:bean class="com.bs.spring.common.interceptor.LoggerInterceptor"/>
+		</interceptor>
+		
+<!-- 		<interceptor>
+			<mapping path="/demo/selectDemoAll.do"/> 해당 주소는 login도 걸리고, /demo/*도 걸림
+			<mapping path="/memo/*"/>
+			<beans:ref bean="loginCheck"/>
+		</interceptor>
+		
+		<interceptor>
+			<mapping path="/memo/*"/>
+			<beans:ref bean="admincheck"/>
+		</interceptor> -->
+		
+		<interceptor>
+			<mapping path="/board/*"/>
+			<beans:ref bean="loginCheck"/>
+		</interceptor>
+	</interceptors>
+	
+	<beans:bean id="admincheck" class="com.bs.spring.common.interceptor.AdminCheckInterceptor"/> <!-- 해당클래스 빈으로 등록 -->
+	<beans:bean id="loginCheck" class="com.bs.spring.common.interceptor.LoginCheckInterceptor"/> <!-- 해당클래스 빈으로 등록 -->
+	
+	
+	<!-- 
+		파일업로드를 처리할 resolver를 등록하자 
+		CommonsMultipartResover 클래스를 빈으로 등록
+	-->
+	<beans:bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<beans:property name="maxUploadSize" value="104857600"/> <!-- 100메가 -->
+	</beans:bean>
+		
+		
+	
+	<beans:bean id="jacksonConverter" class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter"/>
+	
+	<beans:bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+		<beans:property name="messageConverters">
+			<beans:list>
+				<beans:ref bean="jacksonConverter"/>
+			</beans:list>
+		</beans:property>
+	</beans:bean>
+	
+	
+	<!-- 웹소켓 서버 설정하기 -->
+	<beans:bean id="chatting" class="com.bs.spring.common.websocket.ChattingServer"/>
+	
+	<websocket:handlers>
+		<websocket:mapping handler="chatting" path="/chatting"/>  <!-- chatting 핸들러값 -->
+		<websocket:handshake-interceptors>
+			<beans:bean class="org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor"/>
+		</websocket:handshake-interceptors>
+	</websocket:handlers>
+	
+</beans:beans>
+	
+	

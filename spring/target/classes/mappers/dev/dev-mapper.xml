@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="dev">
+		<insert id="insertDemo" parameterType="demo">
+			INSERT INTO DEV VALUES(SEQ_DEV_NO.NEXTVAL,#{devName},
+			#{devAge},#{devEmail},#{devGender},
+			<!-- <foreach item="l" collection="devLang" open="'" close="'" separator=",">${l}</foreach> -->
+			#{devLang, typeHandler=strArr})
+		</insert>
+		
+		<select id="selectDemoAll" resultMap="demoMap">
+			SELECT * FROM DEV
+		</select>
+		
+		<resultMap id="demoMap" type="demo">  <!-- 디비에서는 베열이 varchar2로 저장되어있어서 resultMap으로 해야함 -->
+			<result property="devLang" column="devLang" typeHandler="strArr"/> <!-- 필요한것만 넣으면되고, has a 관계일때는 컬럼 다 넣어야함 -->
+		</resultMap>	
+	
+</mapper>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="board">
+		<resultMap id="boardMap" type="board">
+			<id property="boardNo" column="boardno"/>
+			<result property="boardTitle" column="boardtitle"/>
+			<result property="boardContent" column="boardcontent"/>
+			<result property="boardReadCount" column="boardreadcount"/>
+			<result property="boardDate" column="boarddate"/>
+			<association property="boardWriter" resultMap="memberMap"/>
+			<collection property="file" ofType="attachment">
+				<id property="attachmentNo" column="attachmentno"/>
+				<result property="originalFilename" column="originalfilename"/>
+				<result property="renamedFilename" column="renamedfilename"/>
+				<result property="downloadCount" column="downloadCount"/>
+			</collection>
+		</resultMap>
+		
+		<resultMap id="memberMap" type="member">
+			<id property="userId" column="userid"/>
+			<result property="userName" column="username"/>
+			<result property="gender" column="gender"/>
+			<result property="age" column="age"/>
+			<result property="email" column="email"/>
+			<result property="address" column="address"/>
+			<result property="phone" column="phone"/>
+			<result property="address" column="address"/>
+			<result property="hobby" column="hobby" typeHandler="strArr"/>
+			<result property="enrollDate" column="enrolldate"/>
+		</resultMap>
+		
+
+		<insert id="insertBoard" parameterType="board">
+			INSERT INTO BOARD VALUES(SEQ_BOARDNO.NEXTVAL,#{boardTitle},
+			#{boardWriter.userId},#{boardContent},default,default)
+			
+			<selectKey keyProperty="boardNo" resultType="_int" order="AFTER">
+			<!-- 위 Insert문 끝나고 나면, board의 값에 해당 boardNo를 저장하는 작업 -->
+				SELECT SEQ_BOARDNO.CURRVAL FROM DUAL   <!-- 현재 SEQ_BOARDNO 값을 boardNo값에 대입 -->
+			</selectKey>
+		</insert>
+		
+		<insert id="insertAttachment" parameterType="attachment">
+			INSERT INTO ATTACHMENT VALUES(SEQ_ATTACHMENTNO.NEXTVAL,#{boardNo},
+			#{originalFilename},#{renamedFilename},default,default,default)
+		</insert>
+		
+
+		<select id="selectBoardList" resultMap="boardMap">
+			SELECT * FROM BOARD
+					JOIN MEMBER ON BOARDWRITER=USERID
+					LEFT JOIN ATTACHMENT USING(BOARDNO)
+			ORDER BY BOARDDATE DESC
+			<!-- SELECT * FROM BOARD ORDER BY BOARDDATE DESC -->
+		</select>
+		
+		<select id="selectBoardDetail" resultMap="boardMap" parameterType="_int">
+			SELECT * FROM BOARD
+					JOIN MEMBER ON BOARDWRITER=USERID
+					LEFT JOIN ATTACHMENT USING(BOARDNO)
+			WHERE BOARDNO=#{boardNo}
+			ORDER BY BOARDDATE DESC
+			<!-- SELECT * FROM BOARD WHERE BOARDNO = #{boardNo} -->
+		</select>
+
+		<select id="selectBoardCount" resultType="_int">
+			SELECT COUNT(*) FROM BOARD JOIN MEMBER ON BOARDWRITER=USERID
+					LEFT JOIN ATTACHMENT USING(BOARDNO)
+		</select>
+
+		
+
+</mapper>

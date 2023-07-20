@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration PUBLIC "-//APACHE//DTD LOG4J 1.2//EN" "http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/xml/doc-files/log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+	<!-- Appenders -->
+	<appender name="console" class="org.apache.log4j.ConsoleAppender">
+		<param name="Target" value="System.out" />
+ 		 <layout class="org.apache.log4j.PatternLayout">
+			<!-- <param name="ConversionPattern" value="%-5p : %l - %m%n" /> -->
+			<param name="ConversionPattern" value="[%d{yyyy-MM-dd HH:mm:ss}] %-5p : [%l] - %m%n"/> 
+		</layout>
+		<!-- <layout class="org.apache.log4j.SimpleLayout"/> -->
+		<!-- <layout class="org.apache.log4j.HTMLLayout"/>  --> <!-- html 방식으로 출력 -->
+		<!-- <layout class="org.apache.log4j.xml.XMLLayout"/> -->  <!-- xml방식으로 출력 -->
+	</appender>
+	
+	<!-- 파일로 로그를 출력하는 appender 등록하기 -->
+	<!-- 실시간으로 확인하기 힘드니까 파일에 저장해둠 -->
+	<appender name="fileAppender" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="file" value="c:/logs/spring-log.log"/>
+		<param name="append" value="true"/>
+		<param name="datePattern" value="yyyy-MM-dd"/>
+		 <layout class="org.apache.log4j.PatternLayout">
+			<!-- <param name="ConversionPattern" value="%-5p : %l - %m%n" /> -->
+			<param name="ConversionPattern" value="[%d{yyyy-MM-dd HH:mm:ss}] %-5p : [%l] - %m%n"/> 
+		</layout>
+	</appender>
+	
+	
+	<!-- sql문을 출력하는 logger 등록하기 -->
+	<appender name="sqlLogger" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%-5p : %m%n"/>
+		</layout>
+	</appender>
+	
+	<logger name="jdbc.sqlonly" additivity="false"> <!-- SQL문을 로그로 남김 -->
+		<level value="info"/>
+		<appender-ref ref="sqlLogger"/>
+	</logger>
+	
+		<logger name="jdbc.resultsettable" additivity="false"> <!-- SQL 결과 조회된 데이터를 table 형식으로 만듬 -->
+		<level value="info"/>
+		<appender-ref ref="sqlLogger"/>
+	</logger>
+	
+	
+	
+	
+		<!-- Application Loggers -->
+	<logger name="com.bs.spring">
+		<level value="debug" /> <!-- 용도에 따라서 레벨을 나눔  -->
+		<appender-ref ref="fileAppender"/>
+	</logger>
+	
+	<!-- 3rdparty Loggers -->
+	<logger name="org.springframework.core">
+		<level value="info" />
+	</logger>
+	
+	<logger name="org.springframework.beans">
+		<level value="info" />
+	</logger>
+	
+	<logger name="org.springframework.context">
+		<level value="info" />
+	</logger>
+
+	<logger name="org.springframework.web">
+		<level value="info" />
+	</logger>
+
+	<!-- Root Logger -->
+	<root>
+		<priority value="warn" />
+		<appender-ref ref="console" />
+	</root>
+</log4j:configuration>

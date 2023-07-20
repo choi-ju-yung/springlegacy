@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+	
+	<!-- DB연결하는 객체 bean으로 등록하기 -->
+	<!-- 
+		1. DataSource 클래스 -> DB에 접속하는 정보를 제공해주는 bean -> BasicDataSource 클래스
+		2. SqlSessionFactory 클래스 -> SqlSession을 생성해주는 클래스 -> SqlSessionFactoryBean 클래스
+		3. SqlSession 클래스 -> 사용하는 클래스(SQL 실행, connection 관리) -> SqlSessionTemplate 클래스
+	 -->	
+	
+	
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close"> <!-- destroy-method (닫아줘야하므로) 설정 -->
+		<property name="driverClassName" value="oracle.jdbc.driver.OracleDriver"/>
+		<property name="url" value="jdbc:oracle:thin:@localhost:1521:xe"/>
+		<property name="username" value="spring"/>
+		<property name="password" value="spring"/>
+	</bean>
+		
+	<bean id="proxyDataSource" class="net.sf.log4jdbc.Log4jdbcProxyDataSource">
+		<constructor-arg index="0" ref="dataSource"/>
+		<property name="logFormatter">
+			<bean class="net.sf.log4jdbc.tools.Log4JdbcCustomFormatter">
+				<property name="loggingType" value="MULTI_LINE"/>
+				<property name="sqlPrefix" value="[SQL]"/>
+			</bean>
+		</property>
+	</bean>
+		
+	<bean id="sessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="proxyDataSource"/>  
+		<property name="configLocation" value="classpath:mybatis-config.xml"/>
+		<property name="mapperLocations" value="classpath:mappers/**/*.xml"/>
+		<!--  * : 바로밑에있는거 다,  ** : 하위에있는거 모두 다 -->	
+	</bean>	
+	
+	
+	<bean id="sessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg index="0" ref="sessionFactory"/>
+	</bean>
+		
+		
+	<!-- 트렌젝션 설정하기
+		DataSourceTransactionManager 클래스를 bean으로 등록
+		1. 어노테이션 방식으로 설정하기
+		<tx:annotaion-driven> 태그를 설정
+		
+	  -->
+	<bean id="transactionManager"   
+	class="org.springframework.jdbc.datasource.DataSourceTransactionManager"> <!-- 이부분은 xml이든 어노테이션이든 다 있어야함 -->
+		<property name="dataSource" ref="proxyDataSource"/>	
+	</bean>	
+	<!-- <tx:annotation-driven transaction-manager="transactionManager"/> -->
+	
+	
+	<!-- 
+		xml방식으로 선언하기
+	 -->	
+	 <tx:advice id="txadvice" transaction-manager="transactionManager">
+	 	<tx:attributes>
+	 		<tx:method name="insert*"/>
+	 	</tx:attributes>
+	 </tx:advice>
+	 
+	 <aop:config>
+	 <!-- 어노테이션으로 설정하면, ServiceImpl 마다 다 설정해줘야하지만, xml로 표현식 설정해주면 한번에 처리 가능함 -->
+	 	<aop:pointcut expression="within(com.bs.spring..*ServiceImpl)" id="transpo"/>
+	 	<aop:advisor advice-ref="txadvice" pointcut-ref="transpo"/>
+	 </aop:config>
+		
+		
+</beans>
